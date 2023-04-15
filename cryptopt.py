@@ -2,26 +2,31 @@ from requests import Request, Session
 import json
 import fire 
 import sys
+import os
 
 
 class Command(object):
     def __init__(self):
         self.session = Session()
         self.url = 'https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest' # Coinmarketcap API v2 to return the latest market quote for 1 or more cryptocurrencies.
+        api_key = os.environ.get('API_KEY') # Get the API key from an environment variable
         self.headers = {
             'Accepts': 'application/json',
-            'X-CMC_PRO_API_KEY': '17d30edc-b0d5-474e-8569-c3443ed4c81e'
+            'X-CMC_PRO_API_KEY': api_key
         }
         
     def save(self, file_name, input_list):
-        
-        data = {} #create a dictionary
-        for item in input_list.split(','):
-            key, value = item.split('=')
-            data[key] = float(value)
-        with open(file_name, 'w') as json_file:
-            json.dump(data, json_file, indent=4)            
-        return(f'Saved to portfolio to {file_name}!')
+        try:
+            data = {} #create a dictionary to store the input list
+            for item in input_list.split(','):
+                key, value = item.split('=') # Split the item by '=' to extract the key and value when looping through the list 
+                data[key] = float(value) # Convert the value to float and store it in the dictionary with the key
+            with open(file_name, 'w') as json_file:
+                json.dump(data, json_file, indent=4)            
+            return(f'Saved to portfolio to {file_name}!')
+        except Exception as e:
+            print(f"Input with incorrect format entered. Make sure to enter a list of key-value pairs seperated by commas (e.g., BTC=3.3458,ETH=23.89347).")
+            sys.exit(1)
         
         
     def show(self, file_path, currency_value):
@@ -60,7 +65,7 @@ class Command(object):
                   
             except Exception as e:
                 # Handle other exceptions as needed
-                print(f"Incorrect value inputted: {e}. Please enter correct crypto symbol to portfolio file or enter correct currency value to the command.")
+                print(f"Incorrect value detected: {e}. Please enter correct input list to portfolio OR enter correct currency value to the command.")
                 sys.exit(1)    
             
         return(f'Sum of all cryptocurrency holdings is : {total} {currency_value}!') 
